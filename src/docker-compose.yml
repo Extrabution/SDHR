@@ -1,0 +1,37 @@
+version: '2.1'
+services:
+
+  redis:
+    image: redis:latest
+    container_name: red01
+    command: redis-server
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+
+  app:
+    build:
+      dockerfile: services/controller/Dockerfile
+    network_mode: bridge
+    container_name: app01
+    command: uvicorn app:app --host 0.0.0.0 --port 8080 --workers 4
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    depends_on:
+      - redis
+
+  decision_processor:
+    build:
+      dockerfile: services/controller/Dockerfile
+    network_mode: bridge
+    container_name: dpr01
+    ports:
+      - "7001:7001"
+    expose:
+      - "7001"
+    command: python3 decision_processor.py
+    depends_on:
+      - app
